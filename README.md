@@ -1,56 +1,87 @@
-# Welcome to your Expo app 👋
+# CRUDExam — Hồ sơ người dùng
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ứng dụng Expo SDK 58 / React Native, chạy trên web, Android và iOS. Backend Express kết nối MongoDB `crud_exam`.
 
-## Get started
+## Chức năng hiện tại
 
-1. Install dependencies
+- Đăng ký bằng họ tên, email, mật khẩu và ảnh đại diện từ thiết bị.
+- Đăng nhập, khôi phục phiên và đăng xuất.
+- Hiển thị hồ sơ cá nhân, cập nhật họ tên và ảnh đại diện.
+- Chọn và xem trước ảnh trên web/điện thoại; lưu ảnh vào MongoDB trong `hinhanh` dưới dạng data URI. Hỗ trợ JPG/PNG/WebP tối đa 2 MB.
+- Phân hệ admin: danh sách có tìm kiếm/phân trang, chi tiết, thêm, sửa, xóa có xác nhận và tải ảnh từ thiết bị.
+- Đã bỏ màn hình và API sản phẩm.
 
-   ```bash
-   npm install
-   ```
+## Dữ liệu theo đề
 
-2. Start the app
+Collection `users` gồm đúng bốn trường nghiệp vụ: `email`, `matkhau`, `hoten`, `hinhanh`, cùng `_id` do MongoDB tự sinh. `matkhau` lưu bản băm scrypt và không trả về client. Ứng dụng hiển thị mật khẩu dạng che. Phiên đăng nhập lưu riêng trong `auth_sessions`, không thêm trường vào hồ sơ người dùng.
 
-   ```bash
-   npx expo start
-   ```
+## Chạy ứng dụng
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```powershell
+npm install
+npm --prefix backend install
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Thiết lập `backend/.env` theo `backend/.env.example` và bật MongoDB local hoặc dùng Atlas:
 
-### Other setup steps
+```dotenv
+PORT=3002
+MONGODB_URI=mongodb://127.0.0.1:27017
+MONGODB_DB=crud_exam
+ADMIN_EMAIL=nhuy040705@gmail.com
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```powershell
+npm --prefix backend run db:check
+npm --prefix backend start
+```
 
-## Learn more
+Mở terminal khác, cấu hình `.env` ở thư mục gốc:
 
-To learn more about developing your project with Expo, look at the following resources:
+```dotenv
+EXPO_PUBLIC_API_URL=http://localhost:3002
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```powershell
+npm run web
+```
 
-## Join the community
+Android emulator dùng `http://10.0.2.2:3002`; điện thoại thật dùng IP LAN của máy tính, cùng Wi-Fi. Chạy `npm start` rồi mở bằng Expo Go để kiểm tra điện thoại. Khởi động lại Expo và backend sau khi đổi cấu hình. Deploy qua Internet cần HTTPS.
 
-Join our community of developers creating universal apps.
+Thư viện chọn ảnh được cài bằng `npx expo install expo-image-picker` và có sẵn trong Expo Go. Với development build riêng cần build lại sau khi thêm module native.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Cấu trúc
+
+```text
+src/app/                 Route đăng nhập, đăng ký và hồ sơ
+src/features/account/   Giao diện, context và lưu phiên
+backend/                API, kết nối MongoDB, xác thực, kiểm thử
+```
+
+## Kiểm tra
+
+```powershell
+npm run lint
+npx tsc --noEmit
+npm --prefix backend test
+```
+
+Backend test cần MongoDB hoạt động; tạo và dọn tài khoản kiểm thử riêng. Bộ kiểm thử xác minh schema, băm mật khẩu, đăng nhập/đăng xuất, hết hạn phiên, lưu ảnh, giới hạn ảnh và giới hạn quyền sửa hồ sơ.
+
+## Chuẩn bị nộp bài
+
+```powershell
+npm --prefix backend run db:export
+```
+
+Lệnh xuất `backend/data/users.json` với đúng bốn trường theo đề; dùng tài khoản demo để làm dữ liệu nộp, không nộp thông tin cá nhân thật. Có thể import JSON bằng MongoDB Compass dạng JSON array.
+
+Phần cần chuẩn bị khi nộp: báo cáo các bước, ảnh minh họa giao diện web/điện thoại và MongoDB Compass, link GitHub và video demo.
+
+## Quản trị
+
+`ADMIN_EMAIL` trong `backend/.env` xác định email tài khoản quản trị đã đăng ký. Khởi động lại backend, đăng xuất rồi đăng nhập lại để nhận quyền. Admin được đưa đến `/users`; tài khoản thường chỉ được xem/sửa hồ sơ của mình. Không có trường vai trò trong collection users; `isAdmin` trong API được tính từ cấu hình backend. Không cho xóa hoặc đổi email của admin đang được cấu hình. Đổi mật khẩu người dùng từ admin sẽ thu hồi các phiên đăng nhập của người đó.
+
+Các trang: `/users`, `/users/new`, `/users/[id]`, `/users/[id]/edit`, `/profile`. Trang chi tiết và chỉnh sửa lấy dữ liệu theo ID từ API nên mở trực tiếp hoặc tải lại trang đều được.
+
+Tài khoản từ phiên bản cũ có thể chuyển tên trường bằng `npm --prefix backend run db:migrate-users`. Script chuyển `name` → `hoten`, `password_hash` → `matkhau`, thêm `hinhanh` nếu thiếu; băm mật khẩu cũ dạng văn bản. Dữ liệu sản phẩm cũ không bị xóa nhưng không còn được ứng dụng sử dụng.
